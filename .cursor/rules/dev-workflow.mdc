@@ -1,0 +1,51 @@
+---
+description: InvestIQ dev workflow — restart rules, known errors, and run commands
+alwaysApply: true
+---
+
+# InvestIQ Dev Workflow
+
+## Always Restart After Changes
+
+**After ANY code change to backend or frontend files, always restart both servers** to ensure the changes take effect. Do not assume hot-reload is sufficient.
+
+### Restart Backend
+```powershell
+# Kill any running backend
+Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force
+
+# Start fresh
+Set-Location backend
+.\venv\Scripts\uvicorn.exe main:app --reload --host 127.0.0.1 --port 8000
+```
+
+### Restart Frontend
+```powershell
+# Kill any running frontend (Ctrl+C in the terminal, or:)
+Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
+
+# Start fresh — must use cmd.exe on Windows (npm is a .cmd script, not .exe)
+Set-Location "c:\Users\natja\OneDrive\Documents\Nat\Applications\InvestPassiveIncome\frontend"
+Start-Process -NoNewWindow -FilePath "cmd.exe" -ArgumentList "/c", "npm run dev"
+```
+
+## Known Non-Error: MCP Endpoint in Browser
+
+Opening `http://localhost:8000/mcp` in a browser shows:
+```json
+{"jsonrpc":"2.0","id":"server-error","error":{"code":-32600,"message":"Not Acceptable: Client must accept text/event-stream"}}
+```
+This is **expected and normal**. The `/mcp` endpoint only works with MCP clients (Claude/Cursor), not browsers. To verify the backend is healthy, use `http://127.0.0.1:8000` or `http://127.0.0.1:8000/docs` instead.
+
+## Key URLs
+
+| URL | Purpose |
+|---|---|
+| http://localhost:5173 | Frontend app |
+| http://127.0.0.1:8000 | Backend health check |
+| http://127.0.0.1:8000/docs | Swagger API explorer |
+| http://127.0.0.1:8000/mcp | MCP only (Claude/Cursor — not browser) |
+
+## Important: Always Use 127.0.0.1 for Backend
+
+Never use `localhost` for the backend on Windows. Node.js 18+ resolves `localhost` to IPv6 `::1`, but Uvicorn binds to IPv4 `127.0.0.1`, causing ECONNREFUSED errors.

@@ -1,0 +1,27 @@
+INFO:     Will watch for changes in these directories: ['C:\\Users\\natja\\OneDrive\\Documents\\Nat\\Applications\\InvestPassiveIncome\\backend']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [35920] using WatchFiles
+INFO:     Started server process [3648]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WWARNING:  WatchFiles detected changes in 'main.py'. Reloading...INFO:     Shutting down
+IINFO:     Waiting for application shutdown.IINFO:     Application shutdown complete.IINFO:     Finished server process [17972]WAWARNING:  WatchFiles detected changes in 'main.py'. Reloading...INFO:     Started server process [26544]
+INFO:     Waiting for application startup.
+ININFO:     Application startup complete.ININFO:     Shutting downINFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [26544]
+ININFO:     Started server process [34948]
+INFO:     Waiting for application startup.ININFO:     Application startup complete.INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [34500]
+INFO:     Stopping reloader process [35920]
+erver process [34948]
+INFO:     Started server process [33604]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [33604]
+INFO:     Stopping reloader process [26012]
