@@ -1,0 +1,16 @@
+---
+description: Keep README.md complete and current with all project features
+alwaysApply: true
+---
+
+# Keep README.md Updated
+
+Whenever you add, remove, rename, or meaningfully change a **user-facing feature**, **API**, **AI/MCP capability**, **agent skill install**, **run/deploy step**, or **tech stack** dependency in this project:
+
+1. **Update root `README.md` in the same change** (create it if missing).
+2. Reflect **all current features**, not only what you just touched — remove stale claims; do not leave outdated sections.
+3. Keep these sections accurate when they exist: Current Features, Run (dev/Docker), AI/MCP, Tech Stack, Structure, API, Scoring, Tests, Troubleshooting, Disclaimer/License.
+4. Separate **product features** (app UI/API) from **developer tooling** (e.g. `.cursor/skills`) so readers are not misled.
+5. Prefer verified facts from code over older README wording (versions, chart types, env vars, ports).
+
+Do this without waiting to be asked when the change affects what the project does or how to use it.
