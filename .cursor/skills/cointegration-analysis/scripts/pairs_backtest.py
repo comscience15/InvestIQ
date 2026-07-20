@@ -378,8 +378,10 @@ def run_pairs_backtest(
     # Sharpe ratio from equity curve returns
     eq = result.equity_curve
     if len(eq) > 1:
-        returns = np.diff(eq) / eq[:-1]
-        returns = returns[~np.isnan(returns)]
+        # Guard against division by zero / negative equity producing ±inf
+        with np.errstate(divide="ignore", invalid="ignore"):
+            returns = np.diff(eq) / eq[:-1]
+        returns = returns[np.isfinite(returns)]
         if len(returns) > 0 and np.std(returns) > 1e-10:
             result.sharpe_ratio = np.mean(returns) / np.std(returns) * np.sqrt(252)
         else:
@@ -482,8 +484,10 @@ def main() -> None:
         description="Walk-forward pairs trading backtest with synthetic data"
     )
     parser.add_argument(
-        "--demo", action="store_true", default=True,
-        help="Run demo with synthetic data (default: True)",
+        "--demo",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Run demo with synthetic data (default: True). Use --no-demo to disable.",
     )
     parser.add_argument(
         "--n", type=int, default=300,
@@ -514,6 +518,10 @@ def main() -> None:
         help="Random seed (default: 42)",
     )
     args = parser.parse_args()
+
+    if not args.demo:
+        print("Error: this script only supports synthetic demo data. Omit --no-demo (or pass --demo).")
+        raise SystemExit(1)
 
     print("=" * 60)
     print("  Walk-Forward Pairs Trading Backtest")

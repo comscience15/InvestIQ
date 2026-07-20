@@ -393,7 +393,10 @@ def parse_args() -> argparse.Namespace:
         description="Bracket Order Backtest (analysis only, not financial advice)"
     )
     parser.add_argument(
-        "--demo", action="store_true", default=True, help="Run with synthetic data (default)"
+        "--demo",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Run with synthetic data (default: True). Use --no-demo to disable.",
     )
     parser.add_argument("--rsi-period", type=int, default=14, help="RSI period (default: 14)")
     parser.add_argument("--rsi-entry", type=int, default=30, help="RSI entry threshold (default: 30)")
@@ -420,6 +423,10 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     """Run the RSI bracket order backtest."""
     args = parse_args()
+
+    if not args.demo:
+        print("Error: this script only supports synthetic demo data. Omit --no-demo (or pass --demo).")
+        sys.exit(1)
 
     # Generate mean-reverting data (better for RSI signals)
     print(f"Generating {args.days} days of mean-reverting synthetic OHLCV data (seed={args.seed})...")

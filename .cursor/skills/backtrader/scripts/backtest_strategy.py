@@ -295,9 +295,14 @@ def print_results(
         print(f"  Max Win:         ${max_win:>12,.2f}")
         print(f"  Max Loss:        ${max_loss:>12,.2f}")
 
-        if avg_loss != 0:
-            profit_factor = abs(avg_win * won / (avg_loss * lost))
+        # Require both a non-zero average loss and at least one loser so the
+        # denominator (avg_loss * lost) cannot be zero.
+        denom = avg_loss * lost
+        if denom != 0:
+            profit_factor = abs(avg_win * won / denom)
             print(f"  Profit Factor:   {profit_factor:>12.2f}")
+        elif won > 0 and lost == 0:
+            print("  Profit Factor:            inf  (no losing trades)")
 
         # Streak
         streak = trade_dict.get("streak", {})
@@ -340,9 +345,9 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--demo",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
         default=True,
-        help="Run with synthetic data (default: True)",
+        help="Run with synthetic data (default: True). Use --no-demo to disable.",
     )
     parser.add_argument("--fast", type=int, default=10, help="Fast EMA period (default: 10)")
     parser.add_argument("--slow", type=int, default=30, help="Slow EMA period (default: 30)")
@@ -366,6 +371,10 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     """Run the EMA crossover backtest."""
     args = parse_args()
+
+    if not args.demo:
+        print("Error: this script only supports synthetic demo data. Omit --no-demo (or pass --demo).")
+        sys.exit(1)
 
     if args.fast >= args.slow:
         print(f"Error: fast period ({args.fast}) must be less than slow period ({args.slow})")

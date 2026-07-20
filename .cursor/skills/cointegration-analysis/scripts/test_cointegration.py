@@ -196,7 +196,8 @@ def engle_granger_test(
     # Use Engle-Granger critical values (stricter than standard ADF)
     eg_critical = {"1%": -3.90, "5%": -3.34, "10%": -3.04}
 
-    # Pick the direction with stronger rejection (lower p-value / more negative stat)
+    # Pick the direction with stronger rejection (more negative ADF).
+    # Top-level hedge_ratio / intercept / residuals always match primary_direction.
     if adf_yx["adf_stat"] < adf_xy["adf_stat"]:
         primary_direction = "Y ~ X"
         hedge_ratio = slope_yx
@@ -206,10 +207,10 @@ def engle_granger_test(
         primary_adf = adf_yx
     else:
         primary_direction = "X ~ Y"
-        hedge_ratio = 1.0 / slope_xy if abs(slope_xy) > 1e-10 else float("inf")
-        intercept = -intercept_xy / slope_xy if abs(slope_xy) > 1e-10 else 0.0
+        hedge_ratio = slope_xy
+        intercept = intercept_xy
         hedge_stderr = stderr_xy
-        residuals = resid_yx  # Still use Y - β*X spread for trading
+        residuals = resid_xy
         primary_adf = adf_xy
 
     # Determine cointegration at Engle-Granger critical values
@@ -232,10 +233,12 @@ def engle_granger_test(
         "adf_pvalue": adf_xy["p_value_approx"],
     }
     results["primary_direction"] = primary_direction
-    results["hedge_ratio"] = slope_yx  # Always use Y~X for spread construction
-    results["intercept"] = intercept_yx
-    results["hedge_ratio_stderr"] = stderr_yx
-    results["residuals"] = resid_yx
+    results["hedge_ratio"] = hedge_ratio
+    results["intercept"] = intercept
+    results["hedge_ratio_stderr"] = hedge_stderr
+    results["residuals"] = residuals
+    results["primary_adf_stat"] = primary_adf["adf_stat"]
+    results["primary_adf_pvalue"] = primary_adf["p_value_approx"]
     results["eg_critical_values"] = eg_critical
     results["best_adf_stat"] = adf_stat
     results["cointegrated_5pct"] = eg_cointegrated_5pct
@@ -505,6 +508,7 @@ def print_report(
     print(f"    Hedge ratio: {d['hedge_ratio']:.4f}")
     print(f"    R²: {d['r_squared']:.4f}")
     print()
+    print(f"  Primary direction: {coint_result['primary_direction']}")
     print(f"  Best ADF stat: {coint_result['best_adf_stat']:.4f}")
     print(f"  Engle-Granger critical values: {coint_result['eg_critical_values']}")
 
@@ -514,16 +518,21 @@ def print_report(
     if not coint_result["cointegrated_5pct"] and coint_result["cointegrated_10pct"]:
         print("      (Significant at 10% level)")
 
-    # Hedge ratio
+    # Hedge ratio (matches primary_direction)
     print(f"\n{'HEDGE RATIO':^60}")
     print(sub)
     hr = coint_result["hedge_ratio"]
     se = coint_result["hedge_ratio_stderr"]
+    primary = coint_result["primary_direction"]
+    print(f"  Primary regression: {primary}")
     print(f"  Hedge ratio (β): {hr:.4f}")
     print(f"  Standard error: {se:.4f}")
     print(f"  95% CI: [{hr - 1.96 * se:.4f}, {hr + 1.96 * se:.4f}]")
     print(f"  Intercept (α): {coint_result['intercept']:.4f}")
-    print(f"  Spread: {y_name} - {hr:.4f} * {x_name} - {coint_result['intercept']:.4f}")
+    if primary == "Y ~ X":
+        print(f"  Spread: {y_name} - {hr:.4f} * {x_name} - {coint_result['intercept']:.4f}")
+    else:
+        print(f"  Spread: {x_name} - {hr:.4f} * {y_name} - {coint_result['intercept']:.4f}")
 
     # Spread statistics
     print(f"\n{'SPREAD STATISTICS':^60}")
@@ -621,9 +630,9 @@ def main() -> None:
     )
     parser.add_argument(
         "--demo",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
         default=True,
-        help="Run demo with synthetic cointegrated pair (default: True)",
+        help="Run demo with synthetic cointegrated pair (default: True). Use --no-demo to disable.",
     )
     parser.add_argument(
         "--n",
@@ -650,6 +659,10 @@ def main() -> None:
         help="Random seed (default: 42)",
     )
     args = parser.parse_args()
+
+    if not args.demo:
+        print("Error: this script only supports synthetic demo data. Omit --no-demo (or pass --demo).")
+        raise SystemExit(1)
 
     print("Generating synthetic cointegrated pair...")
     print(f"  N={args.n}, true β={args.hedge_ratio}, seed={args.seed}")
